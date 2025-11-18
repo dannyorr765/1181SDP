@@ -24,44 +24,55 @@ classdef Scene < handle
                 end
             end
         end
-        function setTile(obj, r, c, sprite, useTransparency, tintColor)
+        function setTile(obj, r, c, sprite, useTransparency, spriteColor)
 
-            % If tint provided: apply color transform
+            % If a color override is provided (6 arguments)
             if nargin == 6
-                tinted = uint8(zeros(size(sprite)));
-
+                colored = uint8(zeros(size(sprite)));
+        
+                % Replace ONLY non-black pixels (your transparency rule)
+                mask = sprite(:,:,1) | sprite(:,:,2) | sprite(:,:,3);
+        
                 for ch = 1:3
-                    % Multiply sprite channel by tint (normalized)
-                    tinted(:,:,ch) = uint8(double(sprite(:,:,ch)) .* (double(tintColor(ch)) / 255));
+                    tmp = sprite(:,:,ch);
+                    tmp(mask) = spriteColor(ch);
+                    colored(:,:,ch) = tmp;
                 end
-                obj.sceneData{r,c} = tinted;
+        
+                obj.sceneData{r,c} = colored;
         
             else
-                % No tint → use original sprite
+                % No override → use original sprite
                 obj.sceneData{r,c} = sprite;
             end
-        
         end
 
-        function fillRect(obj, r1, c1, r2, c2, sprite, useTransparency, tintColor)
+        function fillRect(obj, r1, c1, r2, c2, sprite, useTransparency, spriteColor)
 
+            % Apply color override if provided
             if nargin == 8
-                % Apply tint to sprite
-                tinted = uint8(zeros(size(sprite)));
+                colored = uint8(zeros(size(sprite)));
+        
+                % Replace only *visible* (non-black) pixels
+                mask = sprite(:,:,1) | sprite(:,:,2) | sprite(:,:,3);
+        
                 for ch = 1:3
-                    tinted(:,:,ch) = uint8(double(sprite(:,:,ch)) .* (double(tintColor(ch))/255));
+                    tmp = sprite(:,:,ch);
+                    tmp(mask) = spriteColor(ch);
+                    colored(:,:,ch) = tmp;
                 end
             else
-                tinted = sprite;
+                colored = sprite;
             end
         
+            % Fill region
             for r = r1:r2
                 for c = c1:c2
-                    obj.sceneData{r,c} = tinted;
+                    obj.sceneData{r,c} = colored;
                 end
             end
-        
         end
+
 
         function renderScene(obj, zoom)
 
