@@ -4,49 +4,45 @@ classdef Scene < handle
         sceneHeight
         sceneColor
         sceneData
+        blankTile
     end
 
     methods
-        function obj = Scene(color, spriteList)
-            obj.sceneColor = color;
-            obj.sceneWidth = 64;
-            obj.sceneHeight = 36;
-            obj.sceneData = cell(obj.sceneHeight, obj.sceneWidth);
+        function obj = Scene(color, spriteList, sceneWidth, sceneHeight)
+            obj.sceneColor  = color;
+            obj.sceneWidth  = sceneWidth;
+            obj.sceneHeight = sceneHeight;
+            obj.sceneData   = cell(sceneHeight, sceneWidth);
         
-            % Get proper tile size: assume sprites are RGBA (HxWx4)
+            % Force first sprite to RGBA
             base = spriteList{1};
             [h, w, channels] = size(base);
         
-            % Ensure RGBA output
             if channels == 3
-                % Promote to RGBA with full opacity
-                baseRGBA = uint8(zeros(h, w, 4));
-                baseRGBA(:,:,1:3) = base;
-                baseRGBA(:,:,4) = 255;
-                sampleTile = baseRGBA;
+                rgba = uint8(zeros(h, w, 4));
+                rgba(:,:,1:3) = base;
+                rgba(:,:,4)   = 255;
             else
-                sampleTile = base;
+                rgba = base;
             end
         
-            % Initialize background tiles
-            for r = 1:obj.sceneHeight
-                for c = 1:obj.sceneWidth
+            % Construct canonical blank tile (RGBA)
+            blankTile = uint8(zeros(h, w, 4));
+            for ch = 1:3
+                blankTile(:,:,ch) = obj.sceneColor(ch);
+            end
+            blankTile(:,:,4) = 255;
         
-                    % Start with full tile
-                    tile = uint8(zeros(h, w, 4));
+            obj.blankTile = blankTile;
         
-                    % Set RGB to sceneColor
-                    for ch = 1:3
-                        tile(:,:,ch) = obj.sceneColor(ch);
-                    end
-        
-                    % FULLY OPAQUE background tile
-                    tile(:,:,4) = 255;
-        
-                    obj.sceneData{r,c} = tile;
+            % Fill entire sceneData with blank tiles
+            for r = 1:sceneHeight
+                for c = 1:sceneWidth
+                    obj.sceneData{r,c} = blankTile;
                 end
             end
         end
+
 
         function setTile(obj, r, c, sprite, useTransparency, spriteColor)
 
@@ -132,7 +128,10 @@ classdef Scene < handle
         
         end
 
-
+        function fillRectHollow(obj, r1, c1, r2, c2, sprite, useTransparency, spriteColor)
+            obj.fillRect(r1, c1, r2, c2, sprite, useTransparency, spriteColor);
+            obj.fillRect(r1+1,c1+1,r2-1,c2-1, obj.blankTile, useTransparency, spriteColor);
+        end
 
         function renderScene(obj, zoom)
 

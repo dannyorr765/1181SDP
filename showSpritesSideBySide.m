@@ -1,29 +1,25 @@
-% Debug function. This will not be used by the final project
-function showSpritesSideBySide(spriteList, bgColor)
-    % spriteList : cell array of RGB sprite images
-    % bgColor    : [R G B] background (0–255)
-
-    if nargin < 2
-        bgColor = [0 0 0]; % default black
-    end
+function showSpritesSideBySide(spriteList)
 
     n = numel(spriteList);
 
-    % All sprites assumed same size
-    [h, w, ~] = size(spriteList{1});
-
-    % Create blank canvas
-    canvas = uint8(zeros(h, w*n, 3));
-    for ch = 1:3
-        canvas(:,:,ch) = bgColor(ch);
+    % Strip alpha if present
+    first = spriteList{1};
+    if size(first,3) == 4
+        first = first(:,:,1:3);
     end
 
-    % Copy each sprite into position
+    [h, w, ~] = size(first);
+    canvas = zeros(h, w*n, 3, 'uint8');
+
     for i = 1:n
+        s = spriteList{i};
+        if size(s,3) == 4
+            s = s(:,:,1:3); % ignore alpha
+        end
+
         colStart = (i-1)*w + 1;
-        canvas(:, colStart:colStart+w-1, :) = spriteList{i};
+        canvas(:, colStart:colStart+w-1, :) = s;
     end
 
-    % Display result
     imshow(canvas, 'InitialMagnification', 200);
 end
