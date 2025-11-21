@@ -3,6 +3,7 @@ classdef Scene < handle
         sceneWidth
         sceneHeight
         sceneColor
+        spriteList
         sceneData
         blankTile
     end
@@ -12,6 +13,7 @@ classdef Scene < handle
             obj.sceneColor  = color;
             obj.sceneWidth  = sceneWidth;
             obj.sceneHeight = sceneHeight;
+            obj.spriteList = spriteList
             obj.sceneData   = cell(sceneHeight, sceneWidth);
         
             % Force first sprite to RGBA
@@ -44,155 +46,116 @@ classdef Scene < handle
         end
 
 
-        function setTile(obj, r, c, sprite, useTransparency, spriteColor)
+        function setTile(obj, r, c, sprite, spriteColor)
 
+            % Extract channels
             rgb   = sprite(:,:,1:3);
-            alpha = sprite(:,:,4);
-
-            % First check if spriteColor has been inputted
-            % Defaults to the color of the original sprite otherwise
-            if nargin == 6
-                mask = alpha > 0;
-                recolor = uint8(zeros(size(rgb)));
+            alpha = sprite(:,:,4) > 0;   % binary mask
+        
+            % Recolor visible pixels if color override provided
+            if nargin == 5
+                recolored = rgb;
                 for ch = 1:3
-                    chData = rgb(:,:,ch);
-                    chData(mask) = spriteColor(ch);
-                    recolor(:,:,ch) = chData;
+                    chData = recolored(:,:,ch);
+                    chData(alpha) = spriteColor(ch);
+                    recolored(:,:,ch) = chData;
                 end
-                rgb = recolor;
+                rgb = recolored;
             end
         
-            % Next we handle transparency
-            % If useTransparency is false, then we set finalTile to the
-            % colored value created in the previous section
-            if useTransparency == 0
-                obj.sceneData{r,c} = rgb;
-                return;
-            else
-                bg = repmat(reshape(obj.sceneColor,1,1,3), size(rgb,1), size(rgb,2));
-                mask = alpha > 0;
-            
-                out = bg;
-                for ch = 1:3
-                    chData = out(:,:,ch);
-                    chData(mask) = rgb(:,:,ch);
-                    out(:,:,ch) = chData;
-                end
-            
-                obj.sceneData{r,c} = out;
+            % Apply transparency → composite against background
+            out = obj.blankTile(:,:,1:3);    % background RGB
+            for ch = 1:3
+                chData = out(:,:,ch);
+                chData(alpha) = rgb(:,:,ch);
+                out(:,:,ch) = chData;
             end
+        
+            obj.sceneData{r,c} = out;
         end
 
-        function fillRect(obj, r1, c1, r2, c2, sprite, useTransparency, spriteColor)
-        
+        function fillRect(obj, r1, c1, r2, c2, sprite, spriteColor)
+
             rgb   = sprite(:,:,1:3);
-            alpha = sprite(:,:,4);
-            mask  = alpha > 0;
-            % First check if spriteColor has been inputted
-            % Defaults to the color of the original sprite otherwise
-            if nargin == 8
-                colored = rgb;
-
-                mask = rgb(:,:,1) | rgb(:,:,2) | rgb(:,:,3);
+            alpha = sprite(:,:,4) > 0;
         
+            if nargin == 7
+                recolored = rgb;
                 for ch = 1:3
-                    tmp = colored(:,:,ch);
-                    tmp(mask) = spriteColor(ch);
-                    colored(:,:,ch) = tmp;
+                    chData = recolored(:,:,ch);
+                    chData(alpha) = spriteColor(ch);
+                    recolored(:,:,ch) = chData;
                 end
-            else
-                colored = rgb;
+                rgb = recolored;
             end
         
-            % Next we handle transparency
-            % If useTransparency is false, then we set finalTile to the
-            % colored value created in the previous section
-            if useTransparency == 0
-                finalTile = colored;
-        
-                % Otherwise, we then apply alpha data to each pixel, then
-                % set finalTile to the color defined in the last section
-            else
-                a = double(alpha) / 255;
-        
-                bg = repmat(reshape(obj.sceneColor,1,1,3), size(colored,1), size(colored,2));
-
-                finalTile = uint8( a .* double(colored) + (1 - a) .* double(bg) );
+            % composite against background tile
+            out = obj.blankTile(:,:,1:3);
+            for ch = 1:3
+                chData = out(:,:,ch);
+                tmp = rgb(:,:,ch);
+                chData(alpha) = tmp(alpha);
+                out(:,:,ch) = chData;
             end
-
+        
             for r = r1:r2
                 for c = c1:c2
-                    obj.sceneData{r,c} = finalTile;
+                    obj.sceneData{r,c} = out;
                 end
             end
-        
         end
 
-        function fillRectHollow(obj, r1, c1, r2, c2, sprite, useTransparency, spriteColor)
-            obj.fillRect(r1, c1, r2, c2, sprite, useTransparency, spriteColor);
-            obj.fillRect(r1+1,c1+1,r2-1,c2-1, obj.blankTile, useTransparency, spriteColor);
+        function fillRectHollow(obj, r1, c1, r2, c2, sprite, spriteColor)
+            obj.fillRect(r1, c1, r2, c2, sprite, spriteColor);
+            obj.fillRect(r1+1,c1+1,r2-1,c2-1, obj.blankTile, spriteColor);
         end
 
         function renderScene(obj, zoom)
-
+        
             if nargin < 2
                 zoom = 4;
             end
         
             [rows, cols] = size(obj.sceneData);
-        
-            % Detect tile size from first tile
             tile = obj.sceneData{1,1};
-            [tileH, tileW, tileC] = size(tile);
+            [tileH, tileW, ~] = size(tile);
         
-            % Canvas always stores RGB only (final output)
-            img = zeros(rows*tileH, cols*tileW, 3, 'uint8');
+            img = zeros(rows*tileH, cols*tileW, 3, "uint8");
         
-            % Build final image tile-by-tile
             for r = 1:rows
                 for c = 1:cols
-                    tile = obj.sceneData{r,c};
+                    tileRGB = obj.sceneData{r,c};
         
-                    % Extract RGB
-                    if size(tile,3) >= 3
-                        rgb = tile(:,:,1:3);
-                    else
-                        error("Tile at (%d,%d) has <3 channels", r, c);
-                    end
-        
-                    % Extract alpha or assume fully opaque
-                    if size(tile,3) == 4
-                        alpha = double(tile(:,:,4)) / 255;     % HxW double
-                    else
-                        alpha = ones(tileH, tileW);            % fully opaque
-                    end
-        
-                    % Compute canvas region
                     rmin = (r-1)*tileH + 1;
                     rmax = rmin + tileH - 1;
                     cmin = (c-1)*tileW + 1;
                     cmax = cmin + tileW - 1;
         
-                    % Grab background
-                    bg = double(img(rmin:rmax, cmin:cmax, :));
-        
-                    % Perform alpha blending
-                    blended = zeros(tileH, tileW, 3, 'uint8');
-                    for ch = 1:3
-                        fg = double(rgb(:,:,ch));
-                        blended(:,:,ch) = uint8(alpha .* fg + (1-alpha) .* bg(:,:,ch));
-                    end
-        
-                    img(rmin:rmax, cmin:cmax, :) = blended;
+                    img(rmin:rmax, cmin:cmax, :) = tileRGB;
                 end
             end
         
-            % Scale it
             img = imresize(img, zoom, "nearest");
-        
-            % Display
             imshow(img, "InitialMagnification", 100);
+        end
+
+        function insertText(obj, r, c, text, useTransparency, spriteColor)
+
+            % Generate the sprite list using your existing function
+            glyphs = textRender(text, obj.spriteList);  
+            % glyphs is a 1xN cell array
         
+            n = numel(glyphs);
+        
+            for i = 1:n
+                tileCol = c + i - 1;   % horizontal index
+        
+                if nargin == 6
+                    obj.setTile(r, tileCol, glyphs{i}, spriteColor);
+                else
+                    obj.setTile(r, tileCol, glyphs{i});
+                end
+            end
         end
     end
 end
