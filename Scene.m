@@ -44,9 +44,9 @@ classdef Scene < handle
         function setTile(obj, r, c, sprite, spriteColor)
 
             rgb   = sprite(:,:,1:3);
-            alpha = sprite(:,:,4) > 0;   % always valid; all sprites RGBA
-
-            % Optional recolor
+            alpha = sprite(:,:,4) > 0;   % boolean mask (16x16 logical)
+        
+            % Recolor visible pixels if a spriteColor was supplied
             if nargin == 5
                 recolored = rgb;
                 for ch = 1:3
@@ -56,17 +56,21 @@ classdef Scene < handle
                 end
                 rgb = recolored;
             end
-
-            % Composite onto background RGB tile
-            out = obj.blankTile(:,:,1:3);
+        
+            % Get the tile already in the scene (background)
+            out = obj.sceneData{r,c};
+        
+            % Boolean alpha compositing (only overwrite where alpha=1)
             for ch = 1:3
                 tmpBG = out(:,:,ch);
                 tmpFG = rgb(:,:,ch);
-
+        
+                % overwrite only opaque pixels
                 tmpBG(alpha) = tmpFG(alpha);
+        
                 out(:,:,ch) = tmpBG;
             end
-
+        
             obj.sceneData{r,c} = out;
         end
 
