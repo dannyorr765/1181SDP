@@ -172,7 +172,7 @@ classdef Scene < handle
             end
         end
 
-        function [row, col, button] = getMouseInput(obj, zoom)
+        function [row, col] = getMouseInput(obj, zoom)
             if nargin < 2
                 zoom = 4;
             end
@@ -182,7 +182,9 @@ classdef Scene < handle
             figure(fig);
         
             % Wait for a single click
-            [x, y, button] = ginput(1);
+            [x, y] = ginput(1);
+            [s_click, fs_click] = audioread('correct-choice-43861.mp3');
+            sound(s_click, fs_click);
         
             % Calculate tile size
             tile = obj.sceneData{1,1};

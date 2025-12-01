@@ -1,0 +1,148 @@
+clear
+clc
+
+% First I'll make the welcome screen using Simple Game Engine
+sSize = 16; % 16x16 pixel-sprites
+zFactor = 4; % magnification = 4
+BGC = [16,36,181]; % royal blue background
+welcome_scene = simpleGameEngine('retro_pack.png',sSize,sSize,zFactor,BGC);
+welcomeTitle = [1, 1, 1, 1, 1021, 984, 991, 982, 1013, 992, 984, 1, 1, 1, 1];
+teamPrompt = [984, 1012, 1018, 984, 1016, 1, 1012, 1019, 992, 1, 1018, 984, 980, 992, 1017];
+box1 = [1, 1, 1, 1, 1, 1, 625, 626, 627, 1, 1, 1, 1, 1, 1];
+box2 = [1, 1, 1, 1, 1, 1, 657, 1, 659, 1, 670, 1, 1, 1, 1];
+box3 = [1, 1, 1, 1, 1, 1, 689, 690, 691, 1, 1, 1, 1, 1, 1];
+
+
+% Now we will draw the main game screen using our engine
+[spriteList] = getSprites();
+[textureList] = getTextures(spriteList);
+mainScreen = Scene([0,0,0], spriteList, 64,36);
+% titles for each column
+mainScreen.insertText(3,9,'ADD',[255,255,255]);
+mainScreen.insertText(3,20,'SUB',[255,255,255]);
+mainScreen.insertText(3,29,'MULTIPLY',[255,255,255]);
+mainScreen.insertText(3,41,'DIVIDE',[255,255,255]);
+mainScreen.insertText(3,52,'WORD',[255,255,255]);
+% first row of blocks
+mainScreen.fillRect(6,6,10,14,textureList{1},[16,36,181]);
+mainScreen.insertText(8,9,'100',[255,255,255]);
+mainScreen.fillRect(6,17,10,25,textureList{1},[16,36,181]);
+mainScreen.insertText(8,20,'100',[255,255,255]);
+mainScreen.fillRect(6,28,10,36,textureList{1},[16,36,181]);
+mainScreen.insertText(8,31,'100',[255,255,255]);
+mainScreen.fillRect(6,39,10,47,textureList{1},[16,36,181]);
+mainScreen.insertText(8,42,'100',[255,255,255]);
+mainScreen.fillRect(6,50,10,58,textureList{1},[16,36,181]);
+mainScreen.insertText(8,53,'100',[255,255,255]);
+% first row questions
+firstRow = {'What is 9 + 3?';'What is 14 + 3?';'What is 53 + 32?';'What is 235 + 53?';'What is 563 + 446?'};
+firstRowAnswers = {12; 17; 85; 288; 1009};
+% second row of blocks
+mainScreen.fillRect(12,6,16,14,textureList{1},[16,36,181]);
+mainScreen.insertText(14,9,'200',[255,255,255]);
+mainScreen.fillRect(12,17,16,25,textureList{1},[16,36,181]);
+mainScreen.insertText(14,20,'200',[255,255,255]);
+mainScreen.fillRect(12,28,16,36,textureList{1},[16,36,181]);
+mainScreen.insertText(14,31,'200',[255,255,255]);
+mainScreen.fillRect(12,39,16,47,textureList{1},[16,36,181]);
+mainScreen.insertText(14,42,'200',[255,255,255]);
+mainScreen.fillRect(12,50,16,58,textureList{1},[16,36,181]);
+mainScreen.insertText(14,53,'200',[255,255,255]);
+secondRow = {'What is 7 - 4?';'What is 64 - 10?';'What is 34 - 21?';'What is 523 - 32?'; 'What is 529 - 837?'};
+secondRowAnswers = {3; 54; 13; 491; -308};
+% third row of blocks
+mainScreen.fillRect(18,6,22,14,textureList{1},[16,36,181]);
+mainScreen.insertText(20,9,'300',[255,255,255]);
+mainScreen.fillRect(18,17,22,25,textureList{1},[16,36,181]);
+mainScreen.insertText(20,20,'300',[255,255,255]);
+mainScreen.fillRect(18,28,22,36,textureList{1},[16,36,181]);
+mainScreen.insertText(20,31,'300',[255,255,255]);
+mainScreen.fillRect(18,39,22,47,textureList{1},[16,36,181]);
+mainScreen.insertText(20,42,'300',[255,255,255]);
+mainScreen.fillRect(18,50,22,58,textureList{1},[16,36,181]);
+mainScreen.insertText(20,53,'300',[255,255,255]);
+thirdRow = {'What is 4 x 3?';'What is 12 x 3?';'What is 12 x 12?';'What is 32 x 10?';'What is 17 x 32?'};
+thirdRowAnswers = {12; 36; 144; 320; 544};
+% fourth row of blocks
+mainScreen.fillRect(24,6,28,14,textureList{1},[16,36,181]);
+mainScreen.insertText(26,9,'400',[255,255,255]);
+mainScreen.fillRect(24,17,28,25,textureList{1},[16,36,181]);
+mainScreen.insertText(26,20,'400',[255,255,255]);
+mainScreen.fillRect(24,28,28,36,textureList{1},[16,36,181]);
+mainScreen.insertText(26,31,'400',[255,255,255]);
+mainScreen.fillRect(24,39,28,47,textureList{1},[16,36,181]);
+mainScreen.insertText(26,42,'400',[255,255,255]);
+mainScreen.fillRect(24,50,28,58,textureList{1},[16,36,181]);
+mainScreen.insertText(26,53,'400',[255,255,255]);
+fourthRow = {'What is 12 divided by 3?';'What is 36 divided by 12?';'What is 64 divided by 16?';'What is 100 divided by 30 ignoring remainders?';'What is left over when 172 is divided by 82?'};
+fourthRowAnswers = {4; 3; 4; 3; 8;};
+% fifth row of blocks
+mainScreen.fillRect(30,6,34,14,textureList{1},[16,36,181]);
+mainScreen.insertText(32,9,'500',[255,255,255]);
+mainScreen.fillRect(30,17,34,25,textureList{1},[16,36,181]);
+mainScreen.insertText(32,20,'500',[255,255,255]);
+mainScreen.fillRect(30,28,34,36,textureList{1},[16,36,181]);
+mainScreen.insertText(32,31,'500',[255,255,255]);
+mainScreen.fillRect(30,39,34,47,textureList{1},[16,36,181]);
+mainScreen.insertText(32,42,'500',[255,255,255]);
+mainScreen.fillRect(30,50,34,58,textureList{1},[16,36,181]);
+mainScreen.insertText(32,53,'500',[255,255,255]);
+fifthRow = {'Sally has three apples and four oranges. How much fruit does she have?';'Jacob has three sets of 4 playing cards. How many cards does he have?';'Mary has 24 slices of pie and each guest eats 3 slices. How many guests ate?';'Jack has fourty hotwheels cars with 4 wheels each and 12 of them have a spare tire. How many wheels are there in total?';'Bill has 8 slices of pie and 3 guests eat 2 slices. How many does Bill have left?'};
+fifthRowAnswers = {7; 12; 8; 2};
+% Now we will create the question screen using our engine
+[spriteList] = getSprites();
+[textureList] = getTextures(spriteList);
+questionScene = Scene([0,0,0], spriteList, 64,36);
+questionScene.fillRect(1,1,36,64,textureList{1},[16,36,181]);
+questionScene.fillRect(3,3,34,62,spriteList{1})
+questionScene.fillRectHollow(21,8,29,57, textureList{1},[16,36,181])
+questionScene.renderScene();
+
+% now we will create the score screen using our engine
+[spriteList] = getSprites();
+[textureList] = getTextures(spriteList);
+scoreScene = Scene([0,0,0], spriteList, 64,36);
+% create border around screen
+scoreScene.fillRectHollow(1,1,36,64,textureList{1},[16,36,181]);
+% create borders to split screen in half
+scoreScene.fillRectHollow(2,2,35,31,textureList{1},[16,36,181]);
+scoreScene.fillRectHollow(2,32,35,63,textureList{1},[16,36,181]);
+% create right side borders to split the sections into teams
+scoreScene.fillRectHollow(1,2,9,31,textureList{1},[16,36,181]);
+scoreScene.fillRectHollow(9,2,17,31, textureList{1},[16,36,181]);
+scoreScene.fillRectHollow(17,2,25,31, textureList{1},[16,36,181]);
+scoreScene.fillRectHollow(25,2,33,31, textureList{1},[16,36,181]);
+% create left side borders to split the sections into teams
+scoreScene.fillRectHollow(1,32,9,63,textureList{1},[16,36,181]);
+scoreScene.fillRectHollow(9,32,17,63,textureList{1},[16,36,181]);
+scoreScene.fillRectHollow(17,32,25,63,textureList{1},[16,36,181]);
+scoreScene.fillRectHollow(25,32,33,63,textureList{1},[16,36,181]);
+% create question asking to play again
+scoreScene.fillRect(34,3,34,62,spriteList{1},[0,0,0]);
+scoreScene.insertText(34, 10, 'Play again?     1 for YES     0 for NO', [255,255,255]);
+scoreScene.renderScene();
+
+% Combine all the questions into one structure
+
+questions = {firstRow, firstRowAnswers, 100; secondRow, secondRowAnswers, 200; thirdRow, thirdRowAnswers, 300; fourthRow, fourthRowAnswers, 400; fifthRow, fifthRowAnswers, 500};
+
+% Now we will connect all the scenes together in a loop
+replay = true;
+while replay
+    drawScene(welcome_scene, [welcomeTitle; teamPrompt; box1; box2; box3;])
+    getKeyboardInput(welcome_scene);
+    mainScreen.renderScene();
+    while (coordinates != [0,0])
+        coordinates = mainScreen.getMouseInput();
+    rectangleSelected = findQuestionBox(coordinates);
+    questionScene.renderScene();
+    questionScene.getMouseInput();
+    scoreScene.renderScene();
+    getKeyboardInput(scoreScene);
+    if getKeyboardInput(scoreScene) == 0
+        replay = false; % Exit the loop if a specific key is pressed
+    elseif getKeyboardInput(scoreScene) == 1
+        clear;
+        replay = true;
+    end
+end

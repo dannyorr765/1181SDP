@@ -98,7 +98,10 @@ function textList = textRender(stringInput, spriteList)
             textList{outIdx} = spriteList{1};
         elseif ch == ':'
             textList{outIdx} = spriteList{32*29+30};
-
+        elseif ch == '?'
+            textList{outIdx} = spriteList{32 * 25 + 22};
+        elseif ch == '!'
+            textList{outIdx} = spriteList{32 * 25 + 20};
         else
             continue   % ignore unsupported characters
         end
