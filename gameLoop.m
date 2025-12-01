@@ -7,10 +7,9 @@ zFactor = 4; % magnification = 4
 BGC = [16,36,181]; % royal blue background
 welcome_scene = simpleGameEngine('retro_pack.png',sSize,sSize,zFactor,BGC);
 welcomeTitle = [1, 1, 1, 1, 1021, 984, 991, 982, 1013, 992, 984, 1, 1, 1, 1];
-teamPrompt = [984, 1012, 1018, 984, 1016, 1, 1012, 1019, 992, 1, 1018, 984, 980, 992, 1017];
-box1 = [1, 1, 1, 1, 1, 1, 625, 626, 627, 1, 1, 1, 1, 1, 1];
-box2 = [1, 1, 1, 1, 1, 1, 657, 1, 659, 1, 670, 1, 1, 1, 1];
-box3 = [1, 1, 1, 1, 1, 1, 689, 690, 691, 1, 1, 1, 1, 1, 1];
+teamPrompt = [982, 991, 988, 982, 990, 1, 1012, 1019, 992, 1, 1018, 984, 980, 992, 1017];
+box1 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+box2 = [1, 1, 949, 1, 950, 1, 951, 1, 952, 1, 953, 1, 670, 1, 1];
 
 % first row questions
 firstRow = {'What is 9 plus 3?';'What is 14 plus 3?';'What is 53 plus 32?';'What is 235 plus 53?';'What is 563 plus 446?'};
@@ -30,7 +29,7 @@ fifthRowAnswers = {7; 12; 8; 2};
 % Combine all the questions into one structure
 questions = {firstRow, firstRowAnswers, 100; secondRow, secondRowAnswers, 200; thirdRow, thirdRowAnswers, 300; fourthRow, fourthRowAnswers, 400; fifthRow, fifthRowAnswers, 500};
 
-points = {'200','200','200','200','200';'','400','400','400','400';'600','600','600','600','600';'800','800','800','800','800';'1000','1000','1000','1000','1000'}; % Initialize grid of false booleans for the game grid
+points = {'200','200','200','200','200';'400','400','400','400','400';'600','600','600','600','600';'800','800','800','800','800';'1000','1000','1000','1000','1000'}; % Initialize grid of false booleans for the game grid
 mainScreen = mainScreenRender(points);
 
 % Now we will create the question screen using our engine
@@ -68,15 +67,33 @@ scoreScene.fillRectHollow(9,32,17,63,textureList{1},[16,36,181]);
 scoreScene.fillRectHollow(17,32,25,63,textureList{1},[16,36,181]);
 scoreScene.fillRectHollow(25,32,33,63,textureList{1},[16,36,181]);
 % create question asking to play again
-scoreScene.fillRect(34,3,34,62,spriteList{1},[0,0,0]);
-scoreScene.insertText(34, 10, 'Play again?     1 for YES     0 for NO', [255,255,255]);
+scoreScene.fillRect(34,2,35,31,spriteList{1},[0,0,0]);
+scoreScene.insertText(35, 8, 'Play again?   Y   N', [255,255,255]);
+scoreScene.setTile(35,20,spriteList{824},[0,255,0]);
+scoreScene.setTile(35,24,spriteList{825},[255,0,0]);
 scoreScene.renderScene();
 
 % Now we will connect all the scenes together in a loop
 replay = true;
 while replay
-    drawScene(welcome_scene, [welcomeTitle; teamPrompt; box1; box2; box3;])
-    getKeyboardInput(welcome_scene);
+    drawScene(welcome_scene, [welcomeTitle; box1; teamPrompt; box1; box2; box1;])
+
+    % depending on where the user picks, assign a different number to numTeams
+    [row, col] = getMouseInput(welcome_scene);
+    if [row, col] == [5, 3]
+        numTeams = 1;
+    elseif [row, col] == [5,5]
+        numTeams = 2;
+    elseif [row, col] == [5,7]
+        numTeams = 3;
+    elseif [row, col] == [5,9]
+        numTeams = 4;
+    elseif [row, col] == [5,11]
+        numTeams = 5;
+    end
+
+    % Initialize the score for each team using the teamScores function
+    scores = teamScores(numTeams);
 
     % Now we are onto the main screen
 
@@ -98,12 +115,16 @@ while replay
         mainScreen.fillRect();
     end
 
+    % creates the scores scene and lets the user decide to play again
     scoreScene.renderScene();
-    getKeyboardInput(scoreScene);
-    if getKeyboardInput(scoreScene) == 0
-        replay = false; % Exit the loop if a specific key is pressed
-    elseif getKeyboardInput(scoreScene) == 1
-        clear;
+    [r,c] = scoreScene.getMouseInput;
+    while [r,c] ~= [35,20] && [r,c] ~= [35,24]
+        if [r,c] == [35,20]
+        % set all scores equal to 0
+        scores = teamScores(numTeams);
         replay = true;
+        elseif [r,c] == [35, 24]
+            replay = false;
+        end
     end
 end
