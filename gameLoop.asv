@@ -132,9 +132,16 @@ while replay
     drawScene(welcome_scene, [welcomeTitle; teamPrompt; box1; box2; box3;])
     getKeyboardInput(welcome_scene);
     mainScreen.renderScene();
-    while (coordinates != [0,0])
-        coordinates = mainScreen.getMouseInput();
-    rectangleSelected = findQuestionBox(coordinates);
+    rectangleSelected = [0,0];
+    while (rectangleSelected(1) == 0 || rectangleSelected(2) == 0)
+        [row, col] = mainScreen.getMouseInput();
+        rectangleSelected = findQuestionBox(row, col);
+    end
+    [s_click, fs_click] = audioread('correct-choice-43861.mp3');
+    sound(s_click, fs_click);
+
+    % Display the correlating question
+    questionScene.insertText(3, 3, questions(1, ));
     questionScene.renderScene();
     questionScene.getMouseInput();
     scoreScene.renderScene();

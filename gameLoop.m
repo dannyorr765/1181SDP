@@ -35,7 +35,7 @@ mainScreen.insertText(8,42,'100',[255,255,255]);
 mainScreen.fillRect(6,50,10,58,textureList{1},[16,36,181]);
 mainScreen.insertText(8,53,'100',[255,255,255]);
 % first row questions
-firstRow = {'What is 9 + 3?';'What is 14 + 3?';'What is 53 + 32?';'What is 235 + 53?';'What is 563 + 446?'};
+firstRow = {'What is 9 plus 3?';'What is 14 plus 3?';'What is 53 plus 32?';'What is 235 plus 53?';'What is 563 plus 446?'};
 firstRowAnswers = {12; 17; 85; 288; 1009};
 % second row of blocks
 mainScreen.fillRect(12,6,16,14,textureList{1},[16,36,181]);
@@ -48,7 +48,7 @@ mainScreen.fillRect(12,39,16,47,textureList{1},[16,36,181]);
 mainScreen.insertText(14,42,'200',[255,255,255]);
 mainScreen.fillRect(12,50,16,58,textureList{1},[16,36,181]);
 mainScreen.insertText(14,53,'200',[255,255,255]);
-secondRow = {'What is 7 - 4?';'What is 64 - 10?';'What is 34 - 21?';'What is 523 - 32?'; 'What is 529 - 837?'};
+secondRow = {'What is 7 minus 4?';'What is 64 minus 10?';'What is 34 minus 21?';'What is 523 minus 32?'; 'What is 529 minus 837?'};
 secondRowAnswers = {3; 54; 13; 491; -308};
 % third row of blocks
 mainScreen.fillRect(18,6,22,14,textureList{1},[16,36,181]);
@@ -92,10 +92,16 @@ fifthRowAnswers = {7; 12; 8; 2};
 % Now we will create the question screen using our engine
 [spriteList] = getSprites();
 [textureList] = getTextures(spriteList);
-questionScene = Scene([0,0,0], spriteList, 64,36);
-questionScene.fillRect(1,1,36,64,textureList{1},[16,36,181]);
-questionScene.fillRect(3,3,34,62,spriteList{1})
-questionScene.fillRectHollow(21,8,29,57, textureList{1},[16,36,181])
+questionScene = Scene([0,0,0], spriteList, 32,18);
+questionScene.fillRect(1,1,18,32,textureList{1},[16,36,181]);
+questionScene.fillRect(3,3,16,30,spriteList{1})
+%questionScene.fillRectHollow(25,30,30,36,textureList{1},[16,36,181]);
+questionScene.insertText(12,25,'1 2 3', [255,255,255]);
+questionScene.insertText(13,25,'4 5 6', [255,255,255]);
+questionScene.insertText(14,25,'7 8 9', [255,255,255]);
+questionScene.insertText(15,25,'  0  ', [255,255,255]);
+questionScene.setTile(15,25,spriteList{672},[255,0,0]);
+questionScene.setTile(15,29,spriteList{670},[255,255,0]);
 questionScene.renderScene();
 
 % now we will create the score screen using our engine
@@ -132,12 +138,16 @@ while replay
     drawScene(welcome_scene, [welcomeTitle; teamPrompt; box1; box2; box3;])
     getKeyboardInput(welcome_scene);
     mainScreen.renderScene();
-    row = 0;
-    col = 0;
-    while (row == 0 && col == 0)
+    rectangleSelected = [0,0];
+    while (rectangleSelected(1) == 0 || rectangleSelected(2) == 0)
         [row, col] = mainScreen.getMouseInput();
+        rectangleSelected = findQuestionBox(row, col);
     end
-    rectangleSelected = findQuestionBox(row, col);
+    [s_click, fs_click] = audioread('correct-choice-43861.mp3');
+    sound(s_click, fs_click);
+
+    % Display the correlating question
+    questionScene.insertText(5, 5, questions{rectangleSelected(2), 1}{rectangleSelected(1)});
     questionScene.renderScene();
     questionScene.getMouseInput();
     scoreScene.renderScene();
