@@ -167,5 +167,30 @@ classdef Scene < handle
                 end
             end
         end
+
+        function [row, col, button] = getMouseInput(obj, zoom)
+            if nargin < 2
+                zoom = 4;
+            end
+        
+            % Ensure a figure exists and show the current frame
+            fig = gcf;
+            figure(fig);
+        
+            % Wait for a single click
+            [x, y, button] = ginput(1);
+        
+            % Calculate tile size
+            tile = obj.sceneData{1,1};
+            [tileH, tileW, ~] = size(tile);
+        
+            % Convert pixel click to tile index
+            col = ceil( x / (tileW * zoom) );
+            row = ceil( y / (tileH * zoom) );
+        
+            % Clamp to valid grid
+            row = max(1, min(obj.sceneHeight, row));
+            col = max(1, min(obj.sceneWidth,  col));
+        end
     end
 end
