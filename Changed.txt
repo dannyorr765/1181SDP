@@ -1,1 +1,0 @@
-- Added a .insertText method to the Scene class. This method (while still in the works) allows you to insert a line of texts from a specific origin point.
