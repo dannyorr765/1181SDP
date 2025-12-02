@@ -27,9 +27,10 @@ questions = {firstRow, firstRowAnswers, 100; secondRow, secondRowAnswers, 200; t
 % Initialize some other important data and create all the scenes
 points = {'200','200','200','200','200';'400','400','400','400','400';'600','600','600','600','600';'800','800','800','800','800';'1000','1000','1000','1000','1000'}; % Initialize grid of false booleans for the game grid
 scores = {0,0,0,0};
-mainScreen = mainScene(points);
-questionScene = questionScene();
-scoreScene = scoreScene(scores);
+spriteList = getSprites();
+mainScreen = mainSceneConstruct(points);
+questionScene = questionSceneConstruct();
+scoreScene = scoreSceneConstruct(scores);
 
 
 % First make the welcome screen using Simple Game Engine
@@ -76,30 +77,80 @@ while replay
     while ~all(strcmp(points(:), '0'))
         mainScreen.renderScene();
         rectangleSelected = [0,0];
-        while (rectangleSelected(1) == 0 || rectangleSelected(2) == 0 && ~points(rectangleSelected(1),rectangleSelected(2)).equals(''))
+        while (rectangleSelected(1) == 0 || rectangleSelected(2) == 0 || points(rectangleSelected(1),rectangleSelected(2)) == "")
             [row, col] = mainScreen.getMouseInput();
             rectangleSelected = findQuestionBox(row, col);
         end
-        points{rectangleSelected(1), rectangleSelected(2)} = '';
+        points{rectangleSelected(1), rectangleSelected(2)} = 'gfdsg';
+        % Reset mainScene (yes I know this is extremely inefficient)
+        mainScene = mainSceneConstruct(points);
         [s_click, fs_click] = audioread('correct-choice-43861.mp3');
         sound(s_click, fs_click);
     
         % Display the correlating question
         questionScene.insertText(5, 5, questions{rectangleSelected(2), 1}{rectangleSelected(1)});
         questionScene.renderScene();
-        questionScene.getMouseInput();
-        mainScreen.fillRect();
+
+        % Keypad System
+        userInput = "";
+        while true
+            [rows, cols] = questionScene.getMouseInput();
+
+            if strlength(userInput) < 19
+                if isequal([rows, cols], [12, 25])
+                    userInput = userInput + '1';
+                elseif isequal([rows, cols], [12, 27])
+                    userInput = userInput + '2';
+                elseif isequal([rows, cols], [12,29])
+                    userInput = userInput + '3';
+                elseif isequal([rows, cols], [13, 25])
+                    userInput = userInput + '4';
+                elseif isequal([rows, cols], [13, 27])
+                    userInput = userInput + '5';
+                elseif isequal([rows, cols], [13, 29])
+                    userInput = userInput + '6';
+                elseif isequal([rows, cols], [14, 25])
+                    userInput = userInput + '7';
+                elseif isequal([rows, cols], [14, 27])
+                    userInput = userInput + '8';
+                elseif isequal([rows, cols], [14, 29])
+                    userInput = userInput + '9';
+                elseif isequal([rows, cols], [15, 27])
+                    userInput = userInput + '0';
+                elseif isequal([rows, cols], [15, 29])
+                    break;
+                end
+            end
+            if isequal([rows, cols], [15, 25])
+                if strlength(userInput) > 0
+                    questionScene.fillRect(15, 5, 15, 24, spriteList{1}, [0,0,0]);
+                    userInput = extractBefore(userInput, strlength(userInput));
+                end
+            end
+
+            questionScene.insertText(15, 5, char(userInput), [255,255,255]);
+            questionScene.renderScene();
+            pause(0.1);
+        end
+        if userInput == string(questions{rectangleSelected(2), 2}{rectangleSelected(1)})
+            fprintf("Correct!");
+        else
+            fprintf("Incorrect :(");
+        end
+
+        % Reset the question scene
+        questionScene = questionSceneConstruct();
     end
 
     % creates the scores scene and lets the user decide to play again
     scoreScene.renderScene();
     [r,c] = scoreScene.getMouseInput;
     while row == 35 && col == 20 && row == 35 && col == 24
-        if [r,c] == [35,20]
+        if r == 35 && c == 20
         % set all scores equal to 0
         scores = teamScores(numTeams);
         replay = true;
-        elseif [r,c] == [35, 24]
+        elseif r == 35 && c == 24
             replay = false;
         end
     end
