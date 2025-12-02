@@ -160,15 +160,27 @@ classdef Scene < handle
 
             glyphs = textRender(text, obj.spriteList);
             n = numel(glyphs);
-
+        
+            row = r;
+            col = c;
+        
             for i = 1:n
-                tileCol = c + i - 1;
-
-                if nargin == 5
-                    obj.setTile(r, tileCol, glyphs{i}, spriteColor);
-                else
-                    obj.setTile(r, tileCol, glyphs{i});
+        
+                if isequal(glyphs{i}, 0)
+                    row = row + 1;     % move to next tile row
+                    col = c;           % reset to starting column
+                    continue;          % skip drawing a glyph
                 end
+        
+                % Draw glyph at current row/column
+                if nargin == 5
+                    obj.setTile(row, col, glyphs{i}, spriteColor);
+                else
+                    obj.setTile(row, col, glyphs{i});
+                end
+        
+                % Increment tile column
+                col = col + 1;
             end
         end
 
