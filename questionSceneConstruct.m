@@ -12,5 +12,4 @@ function questionScene = questionSceneConstruct()
     questionScene.insertText(15,27,'0', [255,255,255]);
     questionScene.setTile(15,25,spriteList{672},[255,0,0]);
     questionScene.setTile(15,29,spriteList{670},[255,255,0]);
-    questionScene.renderScene();
 end

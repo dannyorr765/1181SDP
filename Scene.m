@@ -6,6 +6,8 @@ classdef Scene < handle
         spriteList
         sceneData
         blankTile
+        figHandle % Records what window was created so it can be closed
+        imgHandle
     end
 
     methods
@@ -149,9 +151,30 @@ classdef Scene < handle
             end
 
             img = imresize(img, zoom, "nearest");
-            imshow(img, "InitialMagnification", 100);
+            if isempty(obj.figHandle) || ~isvalid(obj.figHandle)
+                % First time creating scene window
+                obj.figHandle = figure('Name', 'Scene', 'NumberTitle', 'off');
+        
+                % Create the image object and store its handle
+                obj.imgHandle = imshow(img, "InitialMagnification", 100);
+        
+            else
+                % Reuse the same figure window
+                figure(obj.figHandle);
+        
+                % If image handle doesn't exist, recreate it
+                if isempty(obj.imgHandle) || ~isvalid(obj.imgHandle)
+                    obj.imgHandle = imshow(img, "InitialMagnification", 100);
+                else
+                    % FAST UPDATE: replace image pixels without recreating figure
+                    obj.imgHandle.CData = img;
+                end
+            end
         end
 
+        function closeScene(obj)
+            close(obj.figHandle);
+        end
 
         %--------------------------------------------------------------
         % Insert text as glyph tiles

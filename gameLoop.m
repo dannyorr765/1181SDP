@@ -20,17 +20,17 @@ fourthRow = {'What is 12 divided by 3?';'What is 36 divided by 12?';'What is 64 
 fourthRowAnswers = {4; 3; 4; 3; 8};
 % fifth row questions
 fifthRow = {'Sally has three apples\and four oranges.\How much fruit does\she have?';'Jacob has three sets of\4 playing cards.\How many cards does\he have?';'Mary has 24 slices of\pie and each guest eats\3 slices.\How many guests ate?';'Jack has fourty hotwheel\cars with 4 wheels each\and 12 of them have a\spare tire. How many\wheels are there overall?';'Bill has 8 slices of pie\and 3 guests eat 2 each.\How many does Bill\have left?'};
-fifthRowAnswers = {7; 12; 8; 2};
+fifthRowAnswers = {7; 12; 8; 172; 2};
 % Combine all the questions into one structure
 questions = {firstRow, firstRowAnswers, 100; secondRow, secondRowAnswers, 200; thirdRow, thirdRowAnswers, 300; fourthRow, fourthRowAnswers, 400; fifthRow, fifthRowAnswers, 500};
 
 % Initialize some other important data and create all the scenes
-points = {'200','200','200','200','200';'400','400','400','400','400';'600','600','600','600','600';'800','800','800','800','800';'1000','1000','1000','1000','1000'}; % Initialize grid of false booleans for the game grid
+points = {'200','200','200','200','200';'400','400','400','400','400';'600','600','600','600','600';'800','800','800','800','800';'1000','1000','1000','1000','1000'}; % Initialize grid
+pointsInitial = {'200','200','200','200','200';'400','400','400','400','400';'600','600','600','600','600';'800','800','800','800','800';'1000','1000','1000','1000','1000'};
 scores = {0,0,0,0};
 spriteList = getSprites();
-mainScreen = mainSceneConstruct(points);
 questionScene = questionSceneConstruct();
-scoreScene = scoreSceneConstruct(scores);
+scoreScene = scoreSceneConstruct(scores, false);
 
 
 % First make the welcome screen using Simple Game Engine
@@ -41,7 +41,7 @@ welcome_scene = simpleGameEngine('retro_pack.png',sSize,sSize,zFactor,BGC);
 welcomeTitle = [1, 1, 1, 1, 1021, 984, 991, 982, 1013, 992, 984, 1, 1, 1, 1];
 teamPrompt = [982, 991, 988, 982, 990, 1, 1012, 1019, 992, 1, 1018, 984, 980, 992, 1017];
 box1 = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-box2 = [1, 1, 949, 1, 950, 1, 951, 1, 952, 1, 953, 1, 670, 1, 1];
+box2 = [1, 1, 1, 949, 1, 950, 1, 951, 1, 952, 1, 670, 1, 1, 1];
 
 % Now the main game loop
 replay = true;
@@ -54,42 +54,48 @@ while replay
     numTeams = 0;
     while (true)
         [row, col] = getMouseInput(welcome_scene);
-        if row == 5 && col == 3
+        if row == 5 && col == 4
             numTeams = 1;
-        elseif row == 5 && col == 5
+        elseif row == 5 && col == 6
             numTeams = 2;
-        elseif row == 5 && col == 7
+        elseif row == 5 && col == 8
             numTeams = 3;
-        elseif row == 5 && col == 9
+        elseif row == 5 && col == 10
             numTeams = 4;
-        elseif row == 5 && col == 11
-            numTeams = 5;
-        elseif row == 5 && col == 13 && numTeams ~= 0
+        elseif row == 5 && col == 12 && numTeams ~= 0
             break;
         end
     end
 
+    close(welcome_scene.my_figure);
     % Initialize the score for each team using the teamScores function
     scores = teamScores(numTeams);
-
+    teamSelected = 0;
     % Now we are onto the main screen
 
-    while ~all(strcmp(points(:), '0'))
-        mainScreen.renderScene();
+    mainScene = mainSceneConstruct(points);
+
+    while ~all(strcmp(points(:), ''))
+        % Team selection rotation
+        teamSelected = teamSelected + 1;
+        if teamSelected > size(scores)
+            teamSelected = 1;
+        end
+
+        scoreScene.closeScene();
+        scoreScene = scoreSceneConstruct(scores, false);
+        scoreScene.renderScene();
+        mainScene.renderScene();
         rectangleSelected = [0,0];
         while (rectangleSelected(1) == 0 || rectangleSelected(2) == 0 || points(rectangleSelected(1),rectangleSelected(2)) == "")
-            [row, col] = mainScreen.getMouseInput();
+            [row, col] = mainScene.getMouseInput();
             rectangleSelected = findQuestionBox(row, col);
         end
-        points{rectangleSelected(1), rectangleSelected(2)} = 'gfdsg';
-        % Reset mainScene (yes I know this is extremely inefficient)
-        mainScene = mainSceneConstruct(points);
-        [s_click, fs_click] = audioread('correct-choice-43861.mp3');
-        sound(s_click, fs_click);
     
         % Display the correlating question
         questionScene.insertText(5, 5, questions{rectangleSelected(2), 1}{rectangleSelected(1)});
         questionScene.renderScene();
+        mainScene.closeScene();
 
         % Keypad System
         userInput = "";
@@ -133,25 +139,37 @@ while replay
             pause(0.1);
         end
         if userInput == string(questions{rectangleSelected(2), 2}{rectangleSelected(1)})
-            fprintf("Correct!");
+            scores(teamSelected) = scores(teamSelected) + str2double(points{rectangleSelected(1), rectangleSelected(2)});
+            [s_click, fs_click] = audioread('correct-choice-43861.mp3');
+            sound(s_click, fs_click);
         else
-            fprintf("Incorrect :(");
+            [s_click, fs_click] = audioread('error-mistake-sound-effect-incorrect-answer-437420.mp3');
+            sound(s_click, fs_click);
         end
 
+        points{rectangleSelected(1), rectangleSelected(2)} = '';
+
+        questionScene.closeScene();
         % Reset the question scene
         questionScene = questionSceneConstruct();
+
+        % Reset mainScene
+        mainScene = mainSceneConstruct(points);
     end
 
     % creates the scores scene and lets the user decide to play again
+    scoreScene.closeScene();
+    scoreScene = scoreSceneConstruct(scores, true);
     scoreScene.renderScene();
-    [r,c] = scoreScene.getMouseInput;
-    while row == 35 && col == 20 && row == 35 && col == 24
-        if r == 35 && c == 20
-        % set all scores equal to 0
-        scores = teamScores(numTeams);
-        replay = true;
-        elseif r == 35 && c == 24
+
+    while (true)
+        [r,c] = scoreScene.getMouseInput;
+        if r == 25 && c == 14
+            points = pointsInitial;
+        break;
+        elseif r == 25 && c == 17
             replay = false;
+            break;
         end
     end
 end
